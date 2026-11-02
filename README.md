@@ -20,10 +20,24 @@ On Debian/Ubuntu:
 sudo apt install clang make libx11-dev libgoogle-glog-dev
 ```
 
-For the nested X server used in the example below, also install:
+On Arch Linux:
 
 ```sh
-sudo apt install xserver-xephyr xterm
+sudo pacman -S clang make libx11 glog
+```
+
+For the nested X server and the client used by `start_hero.sh`, also install:
+
+Debian/Ubuntu:
+
+```sh
+sudo apt install xserver-xephyr kitty
+```
+
+Arch Linux:
+
+```sh
+sudo pacman -S xorg-xephyr kitty
 ```
 
 ## Building
@@ -45,10 +59,52 @@ make clean
 variable, so it must be started with `DISPLAY` pointing at a display that has no
 other window manager running.
 
-The recommended way to try it is inside [Xephyr](https://www.freedesktop.org/wiki/Software/Xephyr/),
-a nested X server that runs in a window on your existing desktop.
+### Quick start with `start_hero.sh`
 
-Start Xephyr on display `:1`:
+`start_hero.sh` wraps the common setups: it chooses a display, starts `hero`,
+and launches a client for you.
+
+Test it inside [Xephyr](https://www.freedesktop.org/wiki/Software/Xephyr/), a
+nested X server that runs in a window on your existing desktop:
+
+```sh
+./start_hero.sh xephyr
+```
+
+This mode:
+
+- starts (or reuses) Xephyr on display `:3` at `1366x768`,
+- runs `hero` against `:3`,
+- launches `kitty` on `:3` with `WAYLAND_DISPLAY=""`, so it stays inside
+  Xephyr even when your desktop is Wayland.
+
+Run it against your current desktop session instead:
+
+```sh
+./start_hero.sh
+```
+
+or explicitly:
+
+```sh
+./start_hero.sh real
+```
+
+Real mode uses whatever `DISPLAY` is already set, so make sure no other window
+manager is running on it.
+
+The script backgrounds both `hero` and the client. Close the Xephyr window (or
+kill `hero`) when you are done; `hero` exits when the X server goes away.
+
+Edit the last lines of `start_hero.sh` to launch different clients:
+
+```sh
+WAYLAND_DISPLAY="" DISPLAY="$TARGET_DISPLAY" kitty &
+```
+
+### Manual setup
+
+You can also run the pieces yourself. Start Xephyr on display `:1`:
 
 ```sh
 Xephyr :1 -screen 1280x720 -ac &
@@ -83,7 +139,8 @@ WAYLAND_DISPLAY="" DISPLAY=:1 kitty
 
 Passing the empty string is the important part: it tells the toolkit that no
 Wayland compositor is available, so it falls back to X11 and connects to
-`DISPLAY`. The same trick works for other toolkit apps that prefer Wayland.
+`DISPLAY`. The same trick works for other toolkit apps that prefer Wayland, and
+`start_hero.sh` already does this for the client it launches.
 
 ### Logging
 

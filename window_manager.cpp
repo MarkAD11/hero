@@ -1,5 +1,7 @@
+#define STB_IMAGE_IMPLEMENTATION
 #include "window_manager.hpp"
 #include "event_utils.hpp"
+#include "stb_image.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -27,6 +29,62 @@ WindowManager::WindowManager(Display *display)
 
 {}
 WindowManager::~WindowManager() { XCloseDisplay(display_); }
+bool WindowManager::SetWallpaper(const std::string &image_path) {
+  int width, height, channels;
+
+  unsigned char *pixels =
+      stbi_load(image_path.c_str(), &width, &height, &channels, 4);
+  if (!pixels) {
+    LOG(ERROR) << "Failed to load image: " << image_path;
+    return false;
+  }
+
+  for (int i = 0; i < width * height; ++i) {
+    unsigned char r = pixels[i * 4 + 0];
+    unsigned char b = pixels[i * 4 + 2];
+
+    pixels[i * 4 + 0] = b; // Move Blue to the first position
+    pixels[i * 4 + 2] = r; // Move Red to the third position
+    // Green (index + 1) and Alpha (index + 3) stay right where they are!
+  }
+
+  LOG(INFO) << "Loaded wallpaper: " << width << "x" << height
+            << " (Forced 4 channels)";
+
+  int screen = DefaultScreen(display_);
+  Visual *visual = DefaultVisual(display_, screen);
+  int depth = DefaultDepth(display_, screen);
+
+  Pixmap bg_pixmap = XCreatePixmap(display_, root_, width, height, depth);
+
+  // Now bytes_per_line is safely width * 4 because we forced 4 channels
+  int bytes_per_line = width * 4;
+
+  XImage *ximage = XCreateImage(display_, visual, depth, ZPixmap, 0,
+                                reinterpret_cast<char *>(pixels), width, height,
+                                32, bytes_per_line);
+
+  if (!ximage) {
+    stbi_image_free(pixels);
+    XFreePixmap(display_, bg_pixmap);
+    return false;
+  }
+
+  GC gc = XCreateGC(display_, bg_pixmap, 0, nullptr);
+  XPutImage(display_, bg_pixmap, gc, ximage, 0, 0, 0, 0, width, height);
+
+  XFreeGC(display_, gc);
+
+  ximage->data = nullptr;
+  XDestroyImage(ximage);
+
+  stbi_image_free(pixels);
+
+  XSetWindowBackgroundPixmap(display_, root_, bg_pixmap);
+  XClearWindow(display_, root_);
+
+  return true;
+}
 
 void WindowManager::Run() {
   // Initialization
@@ -56,6 +114,12 @@ void WindowManager::Run() {
                    &top_level_windows, &num_top_level_windows));
   CHECK_EQ(returned_root, root_);
 
+  // XSetWindowBackground(display_, root_, 0x826f39);
+  // XClearWindow(display_, root_);
+  bool was_background_set_successful = SetWallpaper("./assets/wall2.jpg");
+  if (!was_background_set_successful) {
+    LOG(ERROR) << "Something went wrong setting the background";
+  }
   for (unsigned int i = 0; i < num_top_level_windows; i++) {
     // True here means that the window was created before window manager
     Frame(top_level_windows[i], true);
@@ -66,7 +130,6 @@ void WindowManager::Run() {
 
   // Ungrab the x server
   XUngrabServer(display_);
-
   // Main  event loop
   for (;;) {
     // Get the next even

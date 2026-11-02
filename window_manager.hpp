@@ -44,6 +44,7 @@ private:
 
   // Helper functions
   void Frame(Window w, bool was_created_before_window_manager);
+  bool SetWallpaper(const std::string &image_path);
   void UnFrame(Window w); // Xlib error handler. Must be static as its address
                           // is passed to xlib
   static int OnXError(Display *display, XErrorEvent *e);
