@@ -302,7 +302,7 @@ void WindowManager::OnMotionNotify(const XMotionEvent &e) {
 void WindowManager::OnButtonRelease(const XButtonEvent &e) {}
 void WindowManager::Frame(Window w, bool was_created_before_window_manager) {
   const unsigned int BORDER_WIDTH = 2;
-  const unsigned long BORDER_COLOR = 0xff0000;
+  const unsigned long BORDER_COLOR = 0xfcba03;
   const unsigned int BG_COLOR = 0x0000ff;
   // Retrieve window Attributes to our Frame
 
