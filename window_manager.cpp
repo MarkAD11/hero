@@ -1,14 +1,19 @@
+#include <sol/error.hpp>
+#include <sol/optional_implementation.hpp>
+#include <sol/state.hpp>
 #define STB_IMAGE_IMPLEMENTATION
-#include "window_manager.hpp"
 #include "event_utils.hpp"
 #include "stb_image.h"
+#include "window_manager.hpp"
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <algorithm>
 #include <cstring>
 #include <glog/logging.h>
+#include <iostream>
 #include <memory>
+#include <sol/sol.hpp>
 bool WindowManager::wm_detected_;
 
 std::unique_ptr<WindowManager> WindowManager::Create() {
@@ -29,6 +34,18 @@ WindowManager::WindowManager(Display *display)
 
 {}
 WindowManager::~WindowManager() { XCloseDisplay(display_); }
+
+void WindowManager::InitLua() {
+  sol::state lua;
+  lua.open_libraries(sol::lib::base, sol::lib::io, sol::lib::os);
+  lua.set_function("set_wallpaper", [this](const std::string &image_path) {
+    return this->SetWallpaper(image_path);
+  });
+  sol::optional<sol::error> result = lua.script_file("./rc.lua");
+  if (!result) {
+    LOG(ERROR) << "Error in lua configuration";
+  }
+}
 bool WindowManager::SetWallpaper(const std::string &image_path) {
   int width, height, channels;
 
@@ -90,6 +107,7 @@ void WindowManager::Run() {
   // Initialization
   //  Selection of events on root window. We use a special error handler to exit
   //  gracefully if another wm is running.
+  InitLua();
   wm_detected_ = false;
   XSetErrorHandler(&WindowManager::onWmDetected);
   XSelectInput(display_, root_,
@@ -116,10 +134,7 @@ void WindowManager::Run() {
 
   // XSetWindowBackground(display_, root_, 0x826f39);
   // XClearWindow(display_, root_);
-  bool was_background_set_successful = SetWallpaper("./assets/wall2.jpg");
-  if (!was_background_set_successful) {
-    LOG(ERROR) << "Something went wrong setting the background";
-  }
+  // bool was_background_set_successful = SetWallpaper("./assets/wall2.jpg");
   for (unsigned int i = 0; i < num_top_level_windows; i++) {
     // True here means that the window was created before window manager
     Frame(top_level_windows[i], true);

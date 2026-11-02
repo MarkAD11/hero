@@ -1,8 +1,8 @@
 CXX = clang++
 CXXFLAGS = -std=c++20 -Wall -Wextra -O2
-CPPFLAGS =  -DGLOG_USE_GLOG_EXPORT
+CPPFLAGS =  -DGLOG_USE_GLOG_EXPORT  $(shell pkg-config --cflags lua5.3)
 LDFLAGS = -lX11 -pthread
-LDLIBS = -lglog
+LDLIBS = -lglog $(shell pkg-config --libs lua5.3)
 
 TARGET = hero
 

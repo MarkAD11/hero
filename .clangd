@@ -4,3 +4,4 @@ CompileFlags:
   Add:
     - -DGLOG_USE_GLOG_EXPORT
     - -std=c++20
+    - -I/usr/include/lua5.3
