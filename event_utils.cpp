@@ -20,6 +20,17 @@ std::string ToString(const XEvent &e) {
   case MapRequest:
     return "MapRequest";
 
+  case MotionNotify:
+    return "MotionNotify";
+  case ButtonPress:
+    return "ButtonPress";
+
+  case ButtonRelease:
+    return "ButtonRelease";
+
+  case UnmapNotify:
+    return "UnmapNotify";
+
   default:
     return "Unknown event (" + std::to_string(e.type) + ")";
   }
