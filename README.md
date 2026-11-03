@@ -168,7 +168,7 @@ exec hero
 Save this file 
 
 
-1. Create a Hero session file
+### 1. Create a Hero session file
 Create a file called:
 
 hero.desktop
@@ -177,7 +177,7 @@ The usual location for an X11 window manager session is:
 
 /usr/share/xsessions/hero.desktop
 
-Put the following inside it:
+### 2. Put the following inside it:
 ```
 
 [Desktop Entry]
@@ -190,7 +190,6 @@ DesktopNames=Hero
 
 ```
 
-
 If hero isn't installed in a directory on your $PATH, replace both Exec and TryExec with its absolute executable path, for example:
 ```
 Exec=/home/youruser/hero/build/hero
@@ -198,8 +197,7 @@ TryExec=/home/youruser/hero/build/hero
 ```
 Make sure the executable is accessible to your user.
 
-
-3. Select Hero from the login screen
+### 3. Select Hero from the login screen
 1. Log out of your current desktop session.
 2. At the login screen, look for the session selector (often a gear icon or menu).
 3. Select Hero.
